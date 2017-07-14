@@ -1,17 +1,21 @@
-This demo will teach you how to run Tensorflow models on TensorPort. We will go
-from a simple mnist demo to a more complex self-steering car demo.
+This tutorial will teach you how to run Tensorflow models on TensorPort. We will go
+from a simple mnist example to a more complex self-steering car demonstration.
 
-1.1. Simple mnist (google Tensorflow demo) - no dataset setup
-1.2. Deep dive into dataset setup
-2.1. CNN mnist - single-node
-2.2. Make that CNN distributed
-3. [Self - steering car](https://github.com/malomarrec/tensorport-self-driving-demo)
+1.1) Simple mnist (google Tensorflow demo) - no dataset setup
+
+1.2) Deep dive into dataset setup
+
+2.1) CNN mnist - single-node
+
+2.2) Make that CNN distributed
+
+3) [Self - steering car here](https://github.com/malomarrec/tensorport-self-driving-demo)
 
 
 
 # Setup
 
-You need an account on https://www.tensorport.com/
+You will need an account on https://www.tensorport.com/, PIP, Git, and GIT LFS
 
 Start off by getting the TensorPort CLI:
 
@@ -19,7 +23,7 @@ Start off by getting the TensorPort CLI:
 pip install tensorport
 ```
 
-You can now login through `tport login`.
+You can now login the command: `tport login`.
 
 Then clone this repo on your computer:
 
@@ -29,22 +33,27 @@ $ git clone https://github.com/malomarrec/tensorport-self-driving-demo.git
 
 `cd` into that repo.
 
+``` bash
+$ cd tensorport-self-driving-demo/
+```
+
 # 1.1 Simple mnist
 
 For this step we will run `mnist.py`. This is a simple one layer network.
-The data will be downloaded automatically in what you specify in the code in
+The data will be downloaded automatically to the directory specified by the code
 `<ROOT_PATH_TO_LOCAL_DATA>/mnist-dataset` and the outputs and logs in
 `PATH_TO_LOCAL_LOGS`.
 
 ## Run locally
 
-You can run that code in your local environment with:
+You can run this code in your local environment with:
+Note:  you need to have Tensorflow 1.0.0 or later installed in that environment.
+
 
 ```bash
 $ python mnist.py
 ```
 You should see loss values starting to appear.
-Note that you need to have Tensorflow 1.0.0 or later installed in that environment.
 
 ## Simulate a distributed environment locally
 
@@ -71,24 +80,23 @@ $ ...
 
 Here we don't need any specific library, so we can just use a basic virtualenv
 with Tensorflow only. Select 1. The utility will install a basic virtualenv and
-run your code.
+run your code, you should see the following output.
 
 ```
 Running single-node locally
-Using real prefix '/usr/local/Cellar/python/2.7.13/Frameworks/Python.framework/Versions/2.7'
-New python executable in /Users/malo/.tensorport/env/test/bin/python2.7
-Also creating executable in /Users/malo/.tensorport/env/test/bin/python
 ...
 I tensorflow/core/kernels/logging_ops.cc:79] Loss = [0.080547988]
 I tensorflow/core/kernels/logging_ops.cc:79] Loss = [0.15762429]
 I tensorflow/core/kernels/logging_ops.cc:79] Loss = [0.097241819]
 ```
-That step can be useful to debug a script and make sure all requirements will
-be installed remotely.
+
+If this worked you can be confident that your scrip is bug free and all 
+requirements will be install correctly when it is run remotely.
+I almost always try this before running any large project remotely. 
 
 ### Distributed
 
-To simulate a distributed environment, run:
+To simulate a distributed environment run:
 
 
 ```bash
@@ -107,14 +115,14 @@ $ ...
 ```
 
 Enter the number of workers you want to emulate, or press enter to get the
-default (1). Don't go too crazy on the number of workers, this is running on
-your local machine!
+default of 1. Don't go too crazy on the number of workers, this is still running on
+your local machine.
 
 ```
 -> Select number of paramter servers [1]:
 ```
-The parameter server will handle storing your model parameters and handle
-I/O to workers. 1 should be enough.
+The parameter server will handle storage of your model parameters and handle
+the I/O to workers, 1 should be enough.
 
 
 ```
@@ -128,9 +136,9 @@ I/O to workers. 1 should be enough.
 ```
 
 Note: This code will work only on Tensorflow 1.0.0 (ot will fail on more recent
-versions in distributed mode).
+versions in distributed mode). 
 
-Note that all of this can be passed in one single command:
+Note that if you like all of this can be passed as a single command:
 
 ```bash
 tport run --local --distributed --worker-replicas 2 --ps-replicas 1 --requirements 1 --module mnist
@@ -139,11 +147,11 @@ tport run --local --distributed --worker-replicas 2 --ps-replicas 1 --requiremen
 
 ## Run on TensorPort
 
-Our code is ready to run on tensorport.
+Our code is ready to run on TensorPort.
 
 ### Create a TensorPort Project
 
-`cd` into the repo then run
+`cd` into the repo
 
 ``` bash
 $ tport create project
@@ -153,7 +161,7 @@ Creating project mnist-demo .......
 Project malo/mnist-demo is created.
 Matrix: https://tensorport.com/matrix/malo/mnist-demo
 
-Push the code to tensorport using 'git push tensorport master'
+Push the code to TensorPort using 'git push tensorport master'
 ```
 
 The project has been create on TensorPort's git. Let's push the code:
@@ -200,11 +208,17 @@ Now select the most recent commit (0):
 Select commit from [0 - 7] [0]: 0
 ```
 
-Now pick the python module you want to run, and leave the package path empty as
-the module is in the root.
+Now pick the python module (this is just the name of the file) you want to run, and leave the package path empty as
+the module is located in the root.
+
+
 ```bash
 Specify the python module to run [main]: mnist
--> Specify the package path []:
+-> Specify the package path []:```
+
+Then fillout the following questions just like before.
+
+```
 -> Do you want to add a dataset to the job? Y/n [y]: n
 -> Specify the requirements file [requirements.txt]:
 -> Select a TensorFlow version from
@@ -242,25 +256,34 @@ You can see your job in matrix : https://tensorport.com/matrix/malo/mnist-demo.
 Job 'crimson-fog-711' started.
 ```
 
+
+
+
+
 Your job is created and running. You can monitor the status of your jobs with:
 
-``` bash
-$ tport pulse
-```
 
-You can watch the progress of the resources requirements and data cloning by running:
-```bash
-$ tport watch
-```
+
+
+
+You can watch the progress of the resources
+requirements and data cloning by running:
+
+
+
 Log on to Matrix to see the outputs and add the project to TensorBoard.
+
+
+
+
+
 
 
 # 1.2 Deep dive into dataset setup
 
-In the previous part, we've left aside how to setup a dataset, as the data was
+In the previous part we've left out how to setup a dataset. The data was
 small enough and could be automatically downloaded by the script. In most cases
-however the data is large enough that we don't want to have to move it around
-too much.
+however the data is large enough that we don't want to do this. 
 
 In that part we'll take the same example and add dataset handling.
 
@@ -279,6 +302,9 @@ looks like this:
          | t10k-images-idx3-ubyte.gz
          | <files>
 
+
+
+#
 
 For this example, we'll pretend that we are creating a dataset from scratch.
 Copy the dataset somewhere else, for example in `~/Documents/data2`.
@@ -302,7 +328,7 @@ $ git add *
 $ git commit -m "First commit: add data"
 ```
 
-Once this is done, we can create the TensorPort dataset:
+We can now create the TensorPort dataset:
 
 ```bash
 $ tport create dataset
@@ -312,16 +338,16 @@ Dataset malo/test-comma is created.
 Matrix: https://tensorport.com/matrix/malo/test-comma
 ```
 
-Now let's push the code to tensorport:
+Now let's push the code to TensorPort:
 
 ``` bash
 $ git push tensorport master
 ```
 
-This is not the best way to handle data for large files. We will use Git LFS
-to speed things up in part 3) of this tutorial (self-steering car).
+This is not the best way to handle data for large files (over 100MB). We will use Git LFS
+to speed things up in part 3 of this tutorial (self-steering car).
 
-In the code, we need to update the location of the data (if you don't do it, the
+In the code (mnist.py) we need to update the location of the data (if you don't do it, the
 code will still run but it will download the dataset anew). You need to update the
 `data_dir` flag. To make sure we can use the same code on TensorPort and locally
 we use a small wrapper `get_data_path(dataset_name, local_root, local_repo, path)`
@@ -331,9 +357,9 @@ with:
 - `local_repo`: the name of the local data repo (can be = `dataset_name`)
 - `path`: path to the files within the dataset, if you have a complicated tree
 
-Locally, that wrapper returns:
-`local_root/local_repo/path`, here: ``~/Documents/data2/mnist` as `path =''`.
-On TensorPort, that function returns:
+Locally, the wrapper returns: `local_root/local_repo/path`, 
+In this case locally it will return sometihng like: ``~/Documents/data2/mnist` as `path =''`.
+On TensorPort, the wrapper returns:
 `/data/dataset_name/path`.
 
 Let's change `ROOT_PATH_TO_LOCAL_DATA` to `~/Documents/data2/mnist` in `mnist.py`.
@@ -342,7 +368,7 @@ The `dataset_name` is always `<username_of_owner>/<dataset_name>`. You are going
 to create the dataset now, so you will be able to update
 `<username_of_owner>/<dataset_name>` accordingly (in my example, `malo/mnist-dataset`).
 
-The tree on tensorport will be:
+The tree on TensorPort will be:
 data
   | malo
     | mnist-dataset
@@ -350,13 +376,13 @@ data
        | t10k-images-idx3-ubyte.gz
        | <files>
 
-but we don't need to worry too much about this as get_data_path will take care of it.
+but we don't need to worry too much about this as our get_data_path function will take care of it.
 
 Now we can:
-- push the updated code to tensorport
-- run a job
+- Push the updated code to TensorPort
+- Run the code as Job on TensorPort
 
-Run using `tport run` just as in the previous part, but at the dataset prompt:
+Run Job by using the `tport run` command just as in the previous part, but at the dataset prompt select y to use a dataset and 0 for the most recently created dataset:
 ```
  -> Do you want to add a dataset to the job? Y/n [y]: y
  -> Select a dataset
@@ -364,7 +390,7 @@ Run using `tport run` just as in the previous part, but at the dataset prompt:
 1 | malo/comma-train-only
  -> Select dataset to use from [0 - 1] [0]:
 $ 0
- -> Do you want to add another datasetport t to the job? y/N [n]:
+ -> Do you want to add another dataset to the job? y/N [n]:
  $ n
  -> Specify the requirements file [requirements.txt]:
 -> Select a TensorFlow version from
@@ -375,10 +401,4 @@ $ 0
 ...[same process as in the first part]
 ```
 
-Now our job started, as we can see with `tport pulse`, and we can monitor the
-workflow with `tport watch`.
-
-
-The next twotp
-
-# 2.1 Simple mnist
+Now our job started, we can see with `tport pulse`, and monitor the workflow with `tport watch`.
