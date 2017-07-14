@@ -401,4 +401,107 @@ $ 0
 ...[same process as in the first part]
 ```
 
-Now our job started, we can see with `tport pulse`, and monitor the workflow with `tport watch`.
+Now our job started, as we can see with `tport pulse`, and we can monitor the
+workflow with `tport watch`.
+
+In the next two steps we will explain more about how to write your script so
+that it runs in distributed mode on TensorPort. To make it a little more interesting,
+we'll use an CNN model on the mnist dataset.
+
+
+# 2.1 CNN mnist - single-node
+Open mnist_conv_local.py. This code is a CNN version of mnist, that runs only on
+a single node. It's there as a point of comparison for the distributed code.
+It has nice TensorBoard summaries that you can visualize on the platform.
+
+# 2.1 CNN mnist - distributed
+
+To run a distributed model, we use TensorFLow's [`MonitoredTrainingSession`](https://www.tensorflow.org/api_docs/python/tf/train/MonitoredTrainingSession).
+A TensorPort utility take care of all the node set up.
+
+Open mnist_conv_distributed.py.
+
+From line 27, the code is a TensorPort snippet (that you can reuse) that configures
+the distributed training. Let's go over it block by block.
+
+```python
+try:
+  job_name = os.environ['JOB_NAME']
+  task_index = os.environ['TASK_INDEX']
+  ps_hosts = os.environ['PS_HOSTS']
+  worker_hosts = os.environ['WORKER_HOSTS']
+except:
+  job_name = None
+  task_index = 0
+  ps_hosts = None
+  worker_hosts = None
+```
+
+This block recovers the environment of the node the script is running on, or
+no environment if it is running locally. That will be passed to the MonitoredTrainingSession
+so that only the Master will save checkpoints and parameters servers are configured
+properly.
+
+The following FLAGS section was covered in the previous part.
+
+```python
+def device_and_target():
+  # If FLAGS.job_name is not set, we're running single-machine TensorFlow.
+  # Don't set a device.
+  if FLAGS.job_name is None:
+    print("Running single-machine training")
+    return (None, "")
+
+  # Otherwise we're running distributed TensorFlow
+  print("Running distributed training")
+  if FLAGS.task_index is None or FLAGS.task_index == "":
+    raise ValueError("Must specify an explicit `task_index`")
+  if FLAGS.ps_hosts is None or FLAGS.ps_hosts == "":
+    raise ValueError("Must specify an explicit `ps_hosts`")
+  if FLAGS.worker_hosts is None or FLAGS.worker_hosts == "":
+    raise ValueError("Must specify an explicit `worker_hosts`")
+
+  cluster_spec = tf.train.ClusterSpec({
+      "ps": FLAGS.ps_hosts.split(","),
+      "worker": FLAGS.worker_hosts.split(","),
+  })
+  server = tf.train.Server(
+      cluster_spec, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+  if FLAGS.job_name == "ps":
+    server.join()
+
+  worker_device = "/job:worker/task:{}".format(FLAGS.task_index)
+  # The device setter will automatically place Variables ops on separate
+  # parameter servers (ps). The non-Variable ops will be placed on the workers.
+  return (
+      tf.train.replica_device_setter(
+          worker_device=worker_device,
+          cluster=cluster_spec),
+      server.target,
+  )
+```
+In a distributed environment, `device_and_target()`` creates the Cluster config.
+`device, target = device_and_target()` gets the node environment. We will use it
+when we set up the model graph:
+
+```python
+with tf.device(device):
+  # define here the computation graph
+  # placeholders
+  # nodes
+  # loss
+```
+
+and as arguments to the training session:
+
+```
+tf.train.MonitoredTrainingSession(
+     master=target, #
+     is_chief=(FLAGS.task_index == 0), #only the chief will save checkpoints
+     checkpoint_dir=FLAGS.log_dir) as sess:
+
+     #run session
+```
+
+
+Now you should be good to go and run this on TensorPort :). 

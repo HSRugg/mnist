@@ -41,8 +41,6 @@ try:
   task_index = os.environ['TASK_INDEX']
   ps_hosts = os.environ['PS_HOSTS']
   worker_hosts = os.environ['WORKER_HOSTS']
-
-  print(job_name,task_index,ps_hosts,worker_hosts)
 except:
   job_name = None
   task_index = 0
